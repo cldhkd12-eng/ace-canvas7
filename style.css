@@ -1,0 +1,78 @@
+/* 전체 레이아웃 간격 조정 */
+.settings-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem; /* 요소 간 간격 최적화 */
+}
+
+@media (min-width: 768px) {
+  .settings-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 개별 설정 항목 스타일 */
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem; /* 라벨과 슬라이더 사이 여백 축소 */
+}
+
+.setting-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.setting-current-value {
+  font-size: 0.85rem;
+  font-family: serif;
+  font-style: italic;
+  color: #111827;
+}
+
+/* 슬라이더 영역 스타일 */
+.slider-wrapper {
+  position: relative;
+  width: 100%;
+  padding: 0.75rem 0; /* 불필요한 py-4를 py-2 수준으로 축소 */
+  display: flex;
+  align-items: center;
+}
+
+.slider-track-bg {
+  position: relative;
+  height: 4px;
+  width: 100%;
+  background-color: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.slider-track-fill {
+  height: 100%;
+  background-color: #2563eb; /* 포인트 컬러 */
+}
+
+.slider-handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  border: 2px solid #2563eb;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.slider-handle:hover {
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+}
