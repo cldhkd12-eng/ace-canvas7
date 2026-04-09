@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: sessions
+    // Fields: code, teacherId, artworkUrl, artworkTitle, rounds, currentRound, status, createdAt
+    //
+    // Collection: sessions/{sessionId}/participants
+    // Fields: uid, name, sessionId
+    //
+    // Collection: sessions/{sessionId}/submissions
+    // Fields: sessionId, round, uid, name, description, votes, aiFeedback
+    //
+    // Collection: sessions/{sessionId}/results
+    // Fields: sessionId, round, winningDescription, winnerName, generatedImageUrl
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isTeacher(sessionId) {
+      return isAuthenticated() && get(/databases/$(database)/documents/sessions/$(sessionId)).data.teacherId == request.auth.uid;
+    }
+
+    function isValidSession(data) {
+      return data.code is string && data.code.size() > 0 &&
+             data.teacherId is string &&
+             data.artworkUrl is string &&
+             data.rounds is number && data.rounds > 0 &&
+             data.currentRound is number &&
+             data.status in ["waiting", "observing", "describing", "voting", "result", "finished"];
+    }
+
+    function isValidParticipant(data) {
+      return data.uid == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 50 &&
+             data.sessionId is string;
+    }
+
+    function isValidSubmission(data) {
+      return data.sessionId is string &&
+             data.round is number &&
+             data.uid == request.auth.uid &&
+             data.name is string &&
+             data.description is string && data.description.size() > 0 && data.description.size() < 2000 &&
+             data.votes is number;
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidSession(request.resource.data) && request.resource.data.teacherId == request.auth.uid;
+      allow update: if isAuthenticated() && (isTeacher(sessionId) || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) && isAuthenticated()));
+      
+      match /participants/{participantId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated() && isValidParticipant(request.resource.data);
+      }
+
+      match /submissions/{submissionId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && isValidSubmission(request.resource.data);
+        allow update: if isAuthenticated() && (
+          (request.auth.uid == resource.data.uid && isValidSubmission(request.resource.data)) ||
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes']) && isAuthenticated()) ||
+          (isTeacher(sessionId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['aiFeedback']))
+        );
+      }
+
+      match /results/{resultId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isTeacher(sessionId);
+      }
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+  }
+}

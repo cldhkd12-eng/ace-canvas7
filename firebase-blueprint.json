@@ -1,0 +1,84 @@
+{
+  "entities": {
+    "Session": {
+      "title": "Session",
+      "description": "A game session created by a teacher",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "description": "Join code for students" },
+        "teacherId": { "type": "string", "description": "UID of the teacher who created the session" },
+        "artworkUrl": { "type": "string", "description": "URL of the artwork to be appreciated" },
+        "artworkTitle": { "type": "string", "description": "Title of the artwork" },
+        "rounds": { "type": "number", "description": "Total number of rounds" },
+        "currentRound": { "type": "number", "description": "Current round number" },
+        "status": { 
+          "type": "string", 
+          "enum": ["waiting", "observing", "describing", "voting", "result", "finished"],
+          "description": "Current status of the game"
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["code", "teacherId", "artworkUrl", "rounds", "currentRound", "status", "createdAt"]
+    },
+    "Participant": {
+      "title": "Participant",
+      "description": "A student participating in a session",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "UID of the student" },
+        "name": { "type": "string", "description": "Display name of the student" },
+        "sessionId": { "type": "string", "description": "ID of the session" }
+      },
+      "required": ["uid", "name", "sessionId"]
+    },
+    "Submission": {
+      "title": "Submission",
+      "description": "A student's description of the artwork",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "description": "ID of the session" },
+        "round": { "type": "number", "description": "Round number" },
+        "uid": { "type": "string", "description": "UID of the student" },
+        "name": { "type": "string", "description": "Name of the student" },
+        "description": { "type": "string", "description": "The text description" },
+        "votes": { "type": "number", "description": "Number of votes received" },
+        "aiFeedback": { "type": "string", "description": "AI feedback for this description" }
+      },
+      "required": ["sessionId", "round", "uid", "name", "description", "votes"]
+    },
+    "Result": {
+      "title": "Result",
+      "description": "The winning description and generated image for a round",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "description": "ID of the session" },
+        "round": { "type": "number", "description": "Round number" },
+        "winningDescription": { "type": "string", "description": "The description that won the vote" },
+        "winnerName": { "type": "string", "description": "Name of the winner" },
+        "generatedImageUrl": { "type": "string", "description": "URL of the AI-generated image" },
+        "isHallOfFame": { "type": "boolean", "description": "Whether this result is in the Hall of Fame" }
+      },
+      "required": ["sessionId", "round", "winningDescription", "winnerName", "generatedImageUrl"]
+    },
+    "HallOfFame": {
+      "title": "HallOfFame",
+      "description": "Best works from all games",
+      "type": "object",
+      "properties": {
+        "artworkTitle": { "type": "string" },
+        "description": { "type": "string" },
+        "studentName": { "type": "string" },
+        "generatedImageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["artworkTitle", "description", "studentName", "generatedImageUrl", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/sessions/{sessionId}": { "schema": "Session", "description": "Game sessions" },
+    "/sessions/{sessionId}/participants/{participantId}": { "schema": "Participant", "description": "Participants in a session" },
+    "/sessions/{sessionId}/submissions/{submissionId}": { "schema": "Submission", "description": "Submissions for a session" },
+    "/sessions/{sessionId}/results/{resultId}": { "schema": "Result", "description": "Results for each round" },
+    "/hallOfFame/{entryId}": { "schema": "HallOfFame", "description": "Hall of Fame entries" }
+  }
+}
